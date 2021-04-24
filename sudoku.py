@@ -99,6 +99,30 @@ class Solver:
     def __init__(self, sudoku_board):
         self.list = sudoku_board
 
+    def get_row(self, y):
+        row = [self.list[y][i] for i in range(9)]
+        return row
+
+    def get_column(self, x):
+        column = [self.list[i][x] for i in range(9)]
+        return column
+
+    def get_square(self, x, y):
+        square = []
+        x_ganz = (x//3) * 3
+        y_ganz = (y//3) * 3
+        for i in range(3):
+            for j in range(3):
+                square.append(self.list[y_ganz+i][x_ganz+j])
+        return square
+
+    def is_solved(self):
+        for i in self.list:
+            for j in i:
+                if j == 0:
+                    return False
+        return True
+
     def solve(self):
         if self.solve_naked():
             if self.is_solved():
@@ -112,13 +136,6 @@ class Solver:
                 if item == 0:
                     if self.add_single(self.fits_pos(x, y), x, y):
                         return self.solve_naked()
-        return True
-
-    def is_solved(self):
-        for i in self.list:
-            for j in i:
-                if j == 0:
-                    return False
         return True
 
     # def naked_singles_solve(self, x, y):
@@ -138,24 +155,16 @@ class Solver:
         """Hier werden die passenden Zahlen für die angegebene Position im Feld ermittelt und weitergereicht."""
         if possible_num is None:
             possible_num = {1, 2, 3, 4, 5, 6, 7, 8, 9}
-        # row / Reihe
-        for i in range(len(self.list[y])):  # 9
-            for j in range(1, 10):
-                if self.list[y][i] == j and j in possible_num:
-                    possible_num.remove(j)
-        # column / spalte
-        for i in range(len(self.list[x])):  # 9
-            for j in range(1, 10):
-                if self.list[i][x] == j and j in possible_num:
-                    possible_num.remove(j)
-        # square / Quadrat
-        x_ganz = (x//3) * 3
-        y_ganz = (y//3) * 3
-        for i in range(3):
-            for j in range(3):
-                for k in range(1, 10):
-                    if self.list[y_ganz+i][x_ganz+j] == k and k in possible_num:
-                        possible_num.remove(k)
+
+        row = self.get_row(y)
+        column = self.get_column(x)
+        square = self.get_square(x, y)
+        rcs = row, column, square
+
+        for i in rcs:
+            for j, item in enumerate(i):
+                if i[j] in possible_num:
+                    possible_num.remove(item)
 
         return possible_num
 

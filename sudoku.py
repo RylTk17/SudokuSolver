@@ -18,9 +18,11 @@ def make_default_list():
 
 def start_solve():
     new_board = Board()
-    # save/load
-    solved_board = Solver(new_board.input_sudoku()).solve()
-    print_sudoku(solved_board)
+    new_board.input_sudoku()
+    #new_board.save()
+    #new_board.load()
+    solved_board = Solver(new_board.return_board())
+    solved_board.solve()
 
 
 def print_sudoku(a_list):
@@ -108,13 +110,16 @@ class Solver:
         return column
 
     def get_square(self, x, y):
-        square = []
         x_ganz = (x//3) * 3
         y_ganz = (y//3) * 3
-        for i in range(3):
-            for j in range(3):
-                square.append(self.list[y_ganz+i][x_ganz+j])
+
+        square = [self.list[y_ganz+i][x_ganz+j] for i in range(3) for j in range(3)]
         return square
+
+        # for i in range(3):
+        #     for j in range(3):
+        #         square.append(self.list[y_ganz+i][x_ganz+j])
+        # return square
 
     def is_solved(self):
         for i in self.list:
@@ -124,31 +129,36 @@ class Solver:
         return True
 
     def solve(self):
-        if self.solve_naked():
+        while True:
             if self.is_solved():
-                print_sudoku(self.list)
-                print("Board gelöst!")
+                break
+            if self.solve_naked_single():
+                continue
+            if self.solve_hidden_single():
+                continue
+            break
+        print_sudoku(self.list)
+        if self.is_solved():
+            print("Board gelöst!")
+        else:
+            print("Board konnte nicht gelöst werden")
         return self.list
 
-    def solve_naked(self):
-        for y, row in enumerate(self.list, 0):
-            for x, item in enumerate(row, 0):
-                if item == 0:
-                    if self.add_single(self.fits_pos(x, y), x, y):
-                        return self.solve_naked()
-        return True
-
-    # def naked_singles_solve(self, x, y):
-    #     """Naked Singles sind im Feld alleinstehende Zahlen. Wir fügen diese direkt in unser Soduku ein."""
-    #     if self.add_single(self.fits_pos(x, y), x, y):
-    #         return True
-    #     return False
-
+    # Singles
     def add_single(self, a_set, x, y):
         """Falls das Set, dass wir gereicht bekommen aus nur einem Wert besteht, wird dieser eingetragen. """
         if len(a_set) == 1:
             self.list[y][x] = next(iter(a_set))
             return True
+        return False
+
+    def solve_naked_single(self):
+        """Naked Singles sind im Feld alleinstehende Zahlen. Wir fügen diese direkt in unser Soduku ein."""
+        for y, row in enumerate(self.list, 0):
+            for x, item in enumerate(row, 0):
+                if item == 0:
+                    if self.add_single(self.fits_pos(x, y), x, y):
+                        return True
         return False
 
     def fits_pos(self, x, y, possible_num=None):
@@ -167,6 +177,47 @@ class Solver:
                     possible_num.remove(item)
 
         return possible_num
+
+    # hidden singles
+    def solve_hidden_single(self):
+        for y, row in enumerate(self.list, 0):
+            for x, item in enumerate(row, 0):
+                if item == 0:
+                    if self.add_single(self.h_s(x, y), x, y):
+                        return True
+        return False
+
+    def h_s(self, x, y):
+        current_pos = self.fits_pos(x, y)
+        row, column, square = self.get_row(y), self.get_column(x), self.get_square(x, y)
+
+        row_possible = set()
+        for i, item in enumerate(row, 0):
+            if item == 0 and i != x:
+                row_possible |= self.fits_pos(i, y)
+        all_row = current_pos - row_possible
+        if len(all_row) == 1:
+            return all_row
+
+        column_possible = set()
+        for i, item in enumerate(column, 0):
+            if item == 0 and i != y:
+                column_possible |= self.fits_pos(x, i)
+        all_column = current_pos - column_possible
+        if len(all_column) == 1:
+            return all_column
+
+        square_possible = set()
+        x_ganz = (x // 3) * 3
+        y_ganz = (y // 3) * 3
+        for i in range(3):
+            for j in range(3):
+                if self.list[y_ganz+i][x_ganz+j] == 0 and (x, y) != (x_ganz+j, y_ganz+i):
+                    square_possible |= self.fits_pos(x_ganz+j, y_ganz+i)
+        all_square = current_pos - square_possible
+        if len(all_square) == 1:
+            return all_square
+        return current_pos
 
 
 start_solve()

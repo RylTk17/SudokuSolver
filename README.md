@@ -4,7 +4,7 @@ Kann Sudokus zwischen einfach - mittel lösen. Zurzeit nur als command line Prog
 
 Untersützte Methoden:
   - naked singles
-  - (Bald: nidden singles, naked pair, locked pair)
+  - hidden singles
 
 Das Programm sollte in der lage sein die Schwierigkeitsstufen von leicht - mittel lösen. 
 
